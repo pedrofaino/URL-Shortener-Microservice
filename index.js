@@ -40,22 +40,18 @@ app.post('/api/shorturl/:url?', async function (req, res) {
   const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
 
   if (req.params.url != undefined) {
-    url.findOne({ shortUrl: req.params.url }, function (err, url) {
-      if (err) {
-        console.log(err)
-      }
-      res.redirect(url.originUrl)
-    })
+    let sUrl = await url.findOne({ shortUrl: req.params.url })
+    return res.redirect(sUrl.originUrl)
   }
 
 
   if (urlRegex.test(req.body.url)) {
 
-    let eUrl = await url.findOne({originUrl:req.body.url})
+    let eUrl = await url.findOne({ originUrl: req.body.url })
 
-    if(eUrl){
+    if (eUrl) {
       console.log(eUrl)
-      return res.json({origin_url: eUrl.originUrl, short_url:eUrl.shortUrl})
+      return res.json({ origin_url: eUrl.originUrl, short_url: eUrl.shortUrl })
     }
 
     let counter = await url.estimatedDocumentCount();
