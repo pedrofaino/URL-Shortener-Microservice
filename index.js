@@ -35,25 +35,21 @@ app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-app.get('/api/shorturl/:url', function (req, res) {
-  let sUrl = url.findOne({ shortUrl: req.params.url }).then(() => {
-    return res.redirect(sUrl.originUrl)
-  })
+app.get('/api/shorturl/:url', async function (req, res) {
+  let sUrl = await url.findOne({ shortUrl: req.params.url })
+  return res.redirect(sUrl.originUrl)
 })
 
-app.post('/api/shorturl', function (req, res) {
+app.post('/api/shorturl', async function (req, res) {
   const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
   if (urlRegex.test(req.body.url)) {
-    let eUrl = url.findOne({ originUrl: req.body.url }).then(() => {
-      if (eUrl) {
-        console.log(eUrl)
-        return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
-      }
-    })
-    let bodyUrl;
-    let counter = url.estimatedDocumentCount().then(() => {
-      bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
-    })
+    let eUrl = await url.findOne({ originUrl: req.body.url })
+    if (eUrl) {
+      console.log(eUrl)
+      return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
+    }
+    let counter = await url.estimatedDocumentCount();
+    let bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
     bodyUrl.save().then((err) => {
       if (err) {
         console.log(err)
