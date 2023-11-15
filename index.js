@@ -51,7 +51,7 @@ app.post('/api/shorturl/:url?', async function (req, res) {
 
     if (eUrl) {
       console.log(eUrl)
-      return res.json({ origin_url: eUrl.originUrl, short_url: eUrl.shortUrl })
+      return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
     }
 
     let counter = await url.estimatedDocumentCount();
@@ -62,7 +62,7 @@ app.post('/api/shorturl/:url?', async function (req, res) {
       }
       console.log(bodyUrl)
       console.log('se guardo la url')
-      res.json({ origin_url: bodyUrl.originUrl, short_url: bodyUrl.shortUrl })
+      res.json({ original_url: bodyUrl.originUrl, short_url: bodyUrl.shortUrl })
     })
   } else {
     res.json({ err: 'InvalidUrl' })
