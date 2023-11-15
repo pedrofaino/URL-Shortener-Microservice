@@ -35,37 +35,31 @@ app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-app.post('/api/shorturl/:url?', async function (req, res) {
+app.get('/api/shorturl/:url'), async function (req, res) {
+  let sUrl = await url.findOne({ shortUrl: req.params.url })
+  return res.redirect(sUrl.originUrl)
+}
+
+app.post('/api/shorturl', async function (req, res) {
 
   const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
-
-  if (req.params.url != undefined) {
-    let sUrl = await url.findOne({ shortUrl: req.params.url })
-    return res.redirect(sUrl.originUrl)
-  }
-
-
   if (urlRegex.test(req.body.url)) {
-
     let eUrl = await url.findOne({ originUrl: req.body.url })
-
     if (eUrl) {
       console.log(eUrl)
       return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
     }
-
     let counter = await url.estimatedDocumentCount();
     let bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
     bodyUrl.save().then((err) => {
       if (err) {
         console.log(err)
       }
-      console.log(bodyUrl)
       console.log('se guardo la url')
       res.json({ original_url: bodyUrl.originUrl, short_url: bodyUrl.shortUrl })
     })
   } else {
-    res.json({ err: 'InvalidUrl' })
+    res.json({ error: 'invalid url' })
   }
 })
 
