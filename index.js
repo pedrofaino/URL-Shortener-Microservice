@@ -5,7 +5,6 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
 const dns = require('dns');
-const nanoid = require('nanoid');
 
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -64,8 +63,8 @@ app.post('/api/shorturl', async function (req, res) {
       console.log(eUrl)
       return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
     }
-    // let counter = await url.estimatedDocumentCount();
-    let bodyUrl = new url({ originUrl: req.body.url, shortUrl: nanoid() })
+    let counter = await url.estimatedDocumentCount();
+    let bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
     bodyUrl.save().then((err) => {
       if (err) {
         console.log(err)
