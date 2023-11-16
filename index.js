@@ -4,6 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
+const dns = require('dns');
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Connected to MongoDB"));
@@ -23,8 +24,9 @@ let url = mongoose.model('url', urlSchema)
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }))
+app.use(express.json());
+// app.use(bodyParser.json())
 
-app.use(bodyParser.json())
 
 app.use(cors());
 
@@ -35,6 +37,12 @@ app.get('/', function (req, res) {
 });
 
 app.get('/api/shorturl/:url', async function (req, res) {
+  dns.lookup(req.params.url, (err, addresses) => {
+    if (err) {
+      console.error(err);
+      return res.status(400).json({ error: 'invalid url' });
+    }
+  });
   console.log(req.params.url)
   let sUrl = await url.findOne({ shortUrl: req.params.url })
   console.log(sUrl)
@@ -42,6 +50,12 @@ app.get('/api/shorturl/:url', async function (req, res) {
 })
 
 app.post('/api/shorturl', async function (req, res) {
+  dns.lookup(req.params.url, (err, addresses) => {
+    if (err) {
+      console.error(err);
+      return res.status(400).json({ error: 'invalid url' });
+    }
+  });
   const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
   if (urlRegex.test(req.body.url)) {
     let eUrl = await url.findOne({ originUrl: req.body.url })
