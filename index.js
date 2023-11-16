@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
 const dns = require('dns');
+const { nanoid } = require('nanoid');
+
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log("Connected to MongoDB"));
@@ -24,8 +26,7 @@ let url = mongoose.model('url', urlSchema)
 const port = process.env.PORT || 3000;
 
 app.use(bodyParser.urlencoded({ extended: true }))
-app.use(express.json());
-// app.use(bodyParser.json())
+app.use(bodyParser.json())
 
 
 app.use(cors());
@@ -63,8 +64,8 @@ app.post('/api/shorturl', async function (req, res) {
       console.log(eUrl)
       return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
     }
-    let counter = await url.estimatedDocumentCount();
-    let bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
+    // let counter = await url.estimatedDocumentCount();
+    let bodyUrl = new url({ originUrl: req.body.url, shortUrl: nanoid() })
     bodyUrl.save().then((err) => {
       if (err) {
         console.log(err)
