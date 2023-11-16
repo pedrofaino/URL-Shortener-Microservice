@@ -4,7 +4,9 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const app = express();
-const dns = require('dns');
+const dns = require('node:dns');
+const urlParser = require('url-parse');
+
 
 
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -37,45 +39,42 @@ app.get('/', function (req, res) {
 });
 
 app.get('/api/shorturl/:url', async function (req, res) {
-  dns.lookup(req.params.url, (err, addresses) => {
-    if (err) {
-      console.error(err);
-      return res.status(400).json({ error: 'invalid url' });
-    }
-  });
-  console.log(req.params.url)
   let sUrl = await url.findOne({ shortUrl: req.params.url })
   console.log(sUrl)
   return res.redirect(sUrl.originUrl)
 })
 
 app.post('/api/shorturl', async function (req, res) {
-  dns.lookup(req.params.url, (err, addresses) => {
-    if (err) {
-      console.error(err);
-      return res.status(400).json({ error: 'invalid url' });
+  let urlDns = urlParser(req.body.url)
+  console.log(urlDns.hostname)
+  dns.lookup(urlDns.hostname, async (err, addresses) => {
+    console.log('entro aca')
+    if (!addresses) {
+      res.json({ error: 'invalid url' })
+    } else {
+      const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
+      if (urlRegex.test(req.body.url)) {
+        let eUrl = await url.findOne({ originUrl: req.body.url })
+        if (eUrl) {
+          console.log(eUrl)
+          return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
+        }
+        let counter = await url.estimatedDocumentCount();
+        let bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
+        bodyUrl.save().then((err) => {
+          if (err) {
+            console.log(err)
+          }
+          console.log('se guardo la url')
+          console.log(bodyUrl)
+          res.json({ original_url: `${bodyUrl.originUrl}`, short_url: bodyUrl.shortUrl })
+        })
+      } else {
+        res.json({ error: 'invalid url' })
+      }
     }
   });
-  const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*\/?$/;
-  if (urlRegex.test(req.body.url)) {
-    let eUrl = await url.findOne({ originUrl: req.body.url })
-    if (eUrl) {
-      console.log(eUrl)
-      return res.json({ original_url: eUrl.originUrl, short_url: eUrl.shortUrl })
-    }
-    let counter = await url.estimatedDocumentCount();
-    let bodyUrl = new url({ originUrl: req.body.url, shortUrl: counter + 1 })
-    bodyUrl.save().then((err) => {
-      if (err) {
-        console.log(err)
-      }
-      console.log('se guardo la url')
-      console.log(bodyUrl)
-      res.json({ original_url: `${bodyUrl.originUrl}`, short_url: bodyUrl.shortUrl })
-    })
-  } else {
-    res.json({ error: 'invalid url' })
-  }
+
 })
 
 // Your first API endpoint

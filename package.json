@@ -13,7 +13,8 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mongoose": "^8.0.0",
-    "nanoid": "^5.0.3"
+    "nanoid": "^5.0.3",
+    "url-parse": "^1.5.10"
   },
   "license": "MIT",
   "devDependencies": {
